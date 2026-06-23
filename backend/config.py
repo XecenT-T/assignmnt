@@ -15,10 +15,17 @@ BASE_DIR = Path(__file__).resolve().parent
 # ── PostgreSQL ───────────────────────────────────────────────────────
 # Async connection string used by SQLAlchemy + asyncpg.
 # Default points to the Docker-Compose Postgres service.
-DATABASE_URL = os.getenv(
+# Render provides URLs as postgres:// which must be converted to
+# postgresql+asyncpg:// for SQLAlchemy's async engine.
+_raw_db_url = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://txnuser:txnpass@localhost:5432/txn_ranker",
 )
+if _raw_db_url.startswith("postgres://"):
+    _raw_db_url = _raw_db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif _raw_db_url.startswith("postgresql://"):
+    _raw_db_url = _raw_db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+DATABASE_URL = _raw_db_url
 
 # ── Rate Limiting ────────────────────────────────────────────────────
 # Maximum transactions a single user can submit per minute.
